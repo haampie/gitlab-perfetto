@@ -67,7 +67,7 @@ for event in data:
     if event["ph"] == "B":
         event_key = event_id(event)
         for i, events in enumerate(process):
-            if events[-1]["ph"] == "E" and events[-1]["ts"] < event["ts"]:
+            if events[-1]["ph"] == "E" and events[-1]["ts"] <= event["ts"]:
                 events.append(event)
                 event["tid"] = i
                 new_thread_id[event_key] = i
