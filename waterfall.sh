@@ -2,10 +2,15 @@
 
 pipeline="$1"
 
-[ -z "$pipeline" ] && echo "Usage: $0 <pipeline-id>" && exit 1
+[ -z "$pipeline" ] && echo "Usage: $0 <pipeline url>" && exit 1
 
-project=2
-url="https://gitlab.spack.io/api/v4/projects/$project"
+# https://gitlab.spack.io/spack/spack/-/pipelines/698256
+
+base_url=$(echo "$pipeline" | awk -F/ '{print $1 "//" $2 $3 "/"}')
+project=$(echo "$pipeline" | awk -F/ '{print $4 "%2F" $5}')
+pipeline=$(echo "$pipeline" | awk -F/ '{print $8}')
+
+url="$base_url/api/v4/projects/$project"
 
 bridges_url="$url/pipelines/$pipeline/bridges?per_page=100"
 
@@ -18,7 +23,7 @@ fetch_pipeline() {
     page=1
 
     while true; do
-        file="jobs-$project-$1-$page.json"
+        file="jobs-$1-$page.json"
         # Fetch if the file doesn't exist
         fetch_url="$jobs_url?include_retried=true&per_page=$per_page&page=$page"
         [ -f "$file" ] || curl -LfsS "$fetch_url"  -o "$file" || break
@@ -41,7 +46,7 @@ jq \
 'select(.started_at and .finished_at) | '\
 '{name: (.name), cat: "PERF", ph: "B", pid: .pipeline.id, tid: .id, ts: (.started_at | sub("\\.[0-9]+Z$"; "Z") | fromdate * 10e5)},'\
 '{name: (.name), cat: "PERF", ph: "E", pid: .pipeline.id, tid: .id, ts: (.finished_at | sub("\\.[0-9]+Z$"; "Z") | fromdate * 10e5)}'\
-']) | flatten(1) | .[]' jobs-$project-*.json | jq -s > trace_.json
+']) | flatten(1) | .[]' jobs-*.json | jq -s > trace_.json
 
 python3 - <<EOF
 import json
