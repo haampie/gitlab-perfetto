@@ -17,7 +17,7 @@ bridges_url="$url/pipelines/$pipeline/bridges?per_page=100"
 # Obtain the child pipeline ids
 child_pipelines=$(curl -LfsS "$bridges_url" | jq -r '.[].downstream_pipeline.id')
 
-fetch_pipeline() {
+fetch_jobs() {
     jobs_url="$url/pipelines/$1/jobs"
     per_page=100
     page=1
@@ -31,11 +31,11 @@ fetch_pipeline() {
 }
 
 echo "Fetching main pipeline"
-fetch_pipeline "$pipeline"
+fetch_jobs "$pipeline"
 
 for child_pipeline in $child_pipelines; do
     echo "Fetching pipeline $child_pipeline"
-    fetch_pipeline "$child_pipeline"
+    fetch_jobs "$child_pipeline"
 done
 
 # Finally output as trace.json
