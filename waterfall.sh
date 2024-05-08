@@ -24,9 +24,9 @@ fetch_pipeline() {
     batch=8
 
     while true; do
-        curl --parallel --parallel-immediate -LfsS "$jobs_url?include_retried=true&per_page=$per_page&page=[$page-$((page + $batch - 1))]" -o "jobs-$1-#1.json"
-        jq -e "length < $per_page" "jobs-$1-$((page + $batch - 1)).json" > /dev/null && break
-        page=$((page + $batch))
+        curl --parallel --parallel-immediate -LfsS "$jobs_url?include_retried=true&per_page=$per_page&page=[$page-$((page + batch - 1))]" -o "jobs-$1-#1.json"
+        jq -e "length < $per_page" "jobs-$1-$((page + batch - 1)).json" > /dev/null && break
+        page=$((page + batch))
     done
 }
 
@@ -83,4 +83,4 @@ new_processes = [event for process in processes.values() for events in process f
 json.dump(new_processes, open("trace.json", "w"))
 EOF
 
-echo "$(realpath trace.json)"
+realpath trace.json
