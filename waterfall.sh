@@ -21,14 +21,12 @@ fetch_pipeline() {
     jobs_url="$url/pipelines/$1/jobs"
     per_page=100
     page=1
+    batch=8
 
     while true; do
-        file="jobs-$1-$page.json"
-        # Fetch if the file doesn't exist
-        fetch_url="$jobs_url?include_retried=true&per_page=$per_page&page=$page"
-        [ -f "$file" ] || curl -LfsS "$fetch_url"  -o "$file" || break
-        jq -e "length < $per_page" "$file" > /dev/null && break
-        page=$((page + 1))
+        curl --parallel --parallel-immediate -LfsS "$jobs_url?include_retried=true&per_page=$per_page&page=[$page-$((page + $batch - 1))]" -o "jobs-$1-#1.json"
+        jq -e "length < $per_page" "jobs-$1-$((page + $batch - 1)).json" > /dev/null && break
+        page=$((page + $batch))
     done
 }
 
